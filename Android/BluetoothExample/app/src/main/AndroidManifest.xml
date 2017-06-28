@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.bluetoothexample">
+    package="com.example.bluetoothbridgechat">
 
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
-    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
         android:allowBackup="true"
@@ -19,13 +20,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".DeviceListActivity"
+        <activity
+            android:name=".DeviceListActivity"
             android:configChanges="orientation|keyboardHidden"
             android:label="@string/title_select_device"
-            android:theme="@android:style/Theme.Holo.Dialog"
-            >
-
+            android:theme="@android:style/Theme.Holo.Dialog">
         </activity>
+        <activity
+            android:name=".ConnectNetworkServiceActivity"
+            android:label="@string/title_connect_service"
+            ></activity>
     </application>
 
 </manifest>

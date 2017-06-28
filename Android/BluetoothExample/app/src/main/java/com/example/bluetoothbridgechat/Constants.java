@@ -1,4 +1,4 @@
-package com.example.bluetoothexample;
+package com.example.bluetoothbridgechat;
 
 /**
  * Created by xujun on 2017/6/24.

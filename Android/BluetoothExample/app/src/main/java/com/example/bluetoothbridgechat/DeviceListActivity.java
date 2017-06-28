@@ -1,4 +1,4 @@
-package com.example.bluetoothexample;
+package com.example.bluetoothbridgechat;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -11,7 +11,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -25,7 +24,7 @@ import java.util.Set;
  * Created by xujun on 2017/6/24.
  */
 
-class DeviceListActivity extends Activity{
+public class DeviceListActivity extends Activity{
     public static final String TAG = DeviceListActivity.class.getSimpleName();
 
     public static final String EXTRA_DEVICE_ADDRESS = "device_address";
@@ -39,11 +38,11 @@ class DeviceListActivity extends Activity{
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_device_list);
+        setContentView(com.example.bluetoothbridgechat.R.layout.activity_device_list);
 
         setResult(Activity.RESULT_CANCELED);
 
-        Button scanButton = (Button)findViewById(R.id.button_scan);
+        Button scanButton = (Button)findViewById(com.example.bluetoothbridgechat.R.id.button_scan);
 
         scanButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -54,14 +53,14 @@ class DeviceListActivity extends Activity{
         });
 
         ArrayAdapter<String> pairedDeviceArrayAdapter =
-                new ArrayAdapter<String>(this, R.layout.device_name);
-        mNewDevicesArrayAdapter = new ArrayAdapter<String>(this, R.layout.device_name);
+                new ArrayAdapter<String>(this, com.example.bluetoothbridgechat.R.layout.device_name);
+        mNewDevicesArrayAdapter = new ArrayAdapter<String>(this, com.example.bluetoothbridgechat.R.layout.device_name);
 
-        ListView pairedListView = (ListView) findViewById(R.id.paired_devices);
+        ListView pairedListView = (ListView) findViewById(com.example.bluetoothbridgechat.R.id.paired_devices);
         pairedListView.setAdapter(pairedDeviceArrayAdapter);
         pairedListView.setOnItemClickListener(mDeviceClickListener);
 
-        ListView newDevicesListView = (ListView) findViewById(R.id.new_devices);
+        ListView newDevicesListView = (ListView) findViewById(com.example.bluetoothbridgechat.R.id.new_devices);
         newDevicesListView.setAdapter(mNewDevicesArrayAdapter);
         newDevicesListView.setOnItemClickListener(mDeviceClickListener);
 
@@ -77,17 +76,17 @@ class DeviceListActivity extends Activity{
 
         if(pairedDevices.size() > 0)
         {
-            findViewById(R.id.title_paried_devices).setVisibility(View.VISIBLE);
+            findViewById(com.example.bluetoothbridgechat.R.id.title_paried_devices).setVisibility(View.VISIBLE);
             for(BluetoothDevice device: pairedDevices) {
                 pairedDeviceArrayAdapter.add(device.getName() + "\n" + device.getAddress());
             }
 
         }else {
-            String noDeivces = getResources().getText(R.string.no_devcie_have_been_paired).toString();
+            String noDeivces = getResources().getText(com.example.bluetoothbridgechat.R.string.no_devcie_have_been_paired).toString();
             pairedDeviceArrayAdapter.add(noDeivces);
         }
 
-        findViewById(R.id.progressbar).setVisibility(View.GONE);
+        findViewById(com.example.bluetoothbridgechat.R.id.progressbar).setVisibility(View.GONE);
 
 
     }
@@ -105,11 +104,11 @@ class DeviceListActivity extends Activity{
 
     private void doDiscovery() {
         Log.d(TAG, "doDiscovery()");
-        ProgressBar progressBar =  (ProgressBar)findViewById(R.id.progressbar);
+        ProgressBar progressBar =  (ProgressBar)findViewById(com.example.bluetoothbridgechat.R.id.progressbar);
         progressBar.setVisibility(View.VISIBLE);
-        setTitle(R.id.title_scan_devices);
+        setTitle(com.example.bluetoothbridgechat.R.id.title_scan_devices);
 
-        findViewById(R.id.title_new_devices).setVisibility(View.VISIBLE);
+        findViewById(com.example.bluetoothbridgechat.R.id.title_new_devices).setVisibility(View.VISIBLE);
 
         if(mBtAdapter.isDiscovering())
         {
@@ -149,11 +148,11 @@ class DeviceListActivity extends Activity{
                     mNewDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
                 }
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-                findViewById(R.id.progressbar).setVisibility(View.GONE);
-                setTitle(R.string.title_select_device);
+                findViewById(com.example.bluetoothbridgechat.R.id.progressbar).setVisibility(View.GONE);
+                setTitle(com.example.bluetoothbridgechat.R.string.title_select_device);
 
                 if(mNewDevicesArrayAdapter.getCount() == 0) {
-                    String noDevice = getResources().getText(R.string.no_devices_found).toString();
+                    String noDevice = getResources().getText(com.example.bluetoothbridgechat.R.string.no_devices_found).toString();
                     mNewDevicesArrayAdapter.add(noDevice);
                 }
             }

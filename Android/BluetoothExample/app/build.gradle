@@ -4,7 +4,7 @@ android {
     compileSdkVersion 26
     buildToolsVersion "26.0.0"
     defaultConfig {
-        applicationId "com.example.bluetoothexample"
+        applicationId "com.example.bluetoothbridgechat"
         minSdkVersion 18
         targetSdkVersion 26
         versionCode 1

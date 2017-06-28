@@ -2,5 +2,6 @@ TEMPLATE = subdirs
 
 SUBDIRS += \
     BluetoothChatClient \
-    BluetoothChatServer
+    BluetoothChatServer \
+    NetworkServer
 

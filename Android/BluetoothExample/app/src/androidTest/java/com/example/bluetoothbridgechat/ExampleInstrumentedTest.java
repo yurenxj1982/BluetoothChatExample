@@ -1,4 +1,4 @@
-package com.example.bluetoothexample;
+package com.example.bluetoothbridgechat;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

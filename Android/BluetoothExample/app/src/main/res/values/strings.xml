@@ -17,4 +17,9 @@
     <string name="scan_button">搜索</string>
     <string name="title_select_device">请选择设备</string>
     <string name="no_devices_found">未发现设备</string>
+    <string name="menu_connect_service">连接网络服务器</string>
+    <string name="connect_service_button">连接</string>
+    <string name="address_label">地址</string>
+    <string name="port_label">端口</string>
+    <string name="title_connect_service">连接到服务</string>
 </resources>

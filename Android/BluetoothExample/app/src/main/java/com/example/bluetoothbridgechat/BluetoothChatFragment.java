@@ -1,4 +1,4 @@
-package com.example.bluetoothexample;
+package com.example.bluetoothbridgechat;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -10,7 +10,6 @@ import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.NotificationCompat;
 import android.app.ActionBar;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -35,10 +34,13 @@ public class BluetoothChatFragment extends Fragment {
 
     private static final int REQUEST_ENABLE_BLUETOOTH = 1;
     private static final int REQUEST_SEARCH_DEVICES = 2;
+    private static final int REQUEST_GET_SERVICE_ADDRESS = 3;
 
     private BluetoothAdapter mBluetoothAdapter = null;
 
     private BluetoothChatService mChatService = null;
+
+    private NetworkService mNetworkService;
 
     private ListView mMessageListView = null;
     private EditText mOutMessageEdit = null;
@@ -64,7 +66,7 @@ public class BluetoothChatFragment extends Fragment {
         if(mBluetoothAdapter == null) {
             FragmentActivity activity = getActivity();
             Toast.makeText(activity,
-                    R.string.bluetooth_device_not_available,
+                    com.example.bluetoothbridgechat.R.string.bluetooth_device_not_available,
                     Toast.LENGTH_LONG
                     ).show();
             activity.finish();
@@ -81,13 +83,22 @@ public class BluetoothChatFragment extends Fragment {
         } else if(mChatService == null) {
             startChartService();
         }
+
+        if(mNetworkService == null) {
+            startNetworkService();
+        }
     }
+
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         if( mChatService != null) {
             mChatService.stop();
+        }
+
+        if( mNetworkService != null) {
+            mNetworkService.stop();
         }
     }
 
@@ -100,29 +111,41 @@ public class BluetoothChatFragment extends Fragment {
                 mChatService.start();
             }
         }
+
+        if(mNetworkService != null) {
+            if(mNetworkService.getState() == NetworkService.STATE_NONE) {
+                mNetworkService.start();
+            }
+        }
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         //return super.onCreateView(inflater, container, savedInstanceState);
-        return inflater.inflate(R.layout.fragment_bluetooth_chat, container, false);
+        return inflater.inflate(com.example.bluetoothbridgechat.R.layout.fragment_bluetooth_chat, container, false);
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
 
-        mMessageListView = (ListView) view.findViewById(R.id.message_list_view);
-        mOutMessageEdit = (EditText)view.findViewById(R.id.out_message_edit);
-        mSendButton = (Button)view.findViewById(R.id.button_send);
+        mMessageListView = (ListView) view.findViewById(com.example.bluetoothbridgechat.R.id.message_list_view);
+        mOutMessageEdit = (EditText)view.findViewById(com.example.bluetoothbridgechat.R.id.out_message_edit);
+        mSendButton = (Button)view.findViewById(com.example.bluetoothbridgechat.R.id.button_send);
 
     }
 
+    private void startNetworkService() {
+        Log.d(TAG, "startNetworkService");
+
+        mNetworkService = new NetworkService(getActivity(), mNetworkServiceHandler);
+
+    }
 
     private void startChartService() {
         Log.d(TAG, "startChartService");
 
-        mMessageListAdapter = new ArrayAdapter<String>(getActivity(), R.layout.message);
+        mMessageListAdapter = new ArrayAdapter<String>(getActivity(), com.example.bluetoothbridgechat.R.layout.message);
         mMessageListView.setAdapter(mMessageListAdapter);
 
         mOutMessageEdit.setOnEditorActionListener(mWriteListener);
@@ -134,7 +157,7 @@ public class BluetoothChatFragment extends Fragment {
 
                         View view = getView();
                         if(null != view) {
-                           TextView textView = (TextView) view.findViewById(R.id.out_message_edit);
+                           TextView textView = (TextView) view.findViewById(com.example.bluetoothbridgechat.R.id.out_message_edit);
                             String message = textView.getText().toString();
                             sendMessage(message);
                         }
@@ -143,7 +166,7 @@ public class BluetoothChatFragment extends Fragment {
                 }
         );
 
-        mChatService = new BluetoothChatService(getActivity(), mHandler);
+        mChatService = new BluetoothChatService(getActivity(), mBluetoothChatServiceHandler);
 
         mOutStringBuffer = new StringBuffer("");
 
@@ -164,7 +187,7 @@ public class BluetoothChatFragment extends Fragment {
 
     private void sendMessage(String message) {
         if(mChatService.getState() != BluetoothChatService.STATE_CONNECTED) {
-            Toast.makeText(getActivity(), R.string.not_connected, Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), com.example.bluetoothbridgechat.R.string.not_connected, Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -177,7 +200,42 @@ public class BluetoothChatFragment extends Fragment {
         }
     }
 
-    private final Handler mHandler = new Handler(new Handler.Callback() {
+    private final Handler mNetworkServiceHandler = new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message message) {
+            FragmentActivity activity = getActivity();
+
+            switch (message.what) {
+                case Constants.MESSAGE_STATE_CHANGE:
+                    switch (message.arg1) {
+                        case NetworkService.STATE_CONNECTED:
+                            mMessageListAdapter.add("已连接到服务器");
+                            break;
+                        case NetworkService.STATE_CONNECTING:
+                            mMessageListAdapter.add("正在连接服务器");
+                            break;
+                        case NetworkService.STATE_NONE:
+                            mMessageListAdapter.add("服务器连接断开");
+                            break;
+                    }
+                    break;
+                case Constants.MESSAGE_READ:
+                    byte[] readBuf = (byte[]) message.obj;
+                    String readmessage = new String(readBuf, 0, message.arg1);
+                    mMessageListAdapter.add("NetworkService: " + readmessage);
+                    break;
+                case Constants.MESSAGE_TOAST:
+                    if(null != activity) {
+                        Toast.makeText(activity, message.getData().getString(Constants.TOAST),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+            }
+            return true;
+        }
+    });
+
+    private final Handler mBluetoothChatServiceHandler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message message) {
             FragmentActivity activity = getActivity();
@@ -186,15 +244,15 @@ public class BluetoothChatFragment extends Fragment {
                 case Constants.MESSAGE_STATE_CHANGE:
                     switch (message.arg1) {
                         case BluetoothChatService.STATE_CONNECTED:
-                            setStatus(getString(R.string.title_connected_to, mConnectedDevcieName));
+                            setStatus(getString(com.example.bluetoothbridgechat.R.string.title_connected_to, mConnectedDevcieName));
                             mMessageListAdapter.clear();
                             break;
                         case BluetoothChatService.STATE_CONNECTING:
-                            setStatus(getString(R.string.title_connecting));
+                            setStatus(getString(com.example.bluetoothbridgechat.R.string.title_connecting));
                             break;
                         case BluetoothChatService.STATE_LISTEN:
                         case BluetoothChatService.STATE_NONE:
-                            setStatus(getString(R.string.title_not_connected));
+                            setStatus(getString(com.example.bluetoothbridgechat.R.string.title_not_connected));
                     }
                     break;
                 case Constants.MESSAGE_WRITE:
@@ -206,6 +264,7 @@ public class BluetoothChatFragment extends Fragment {
                     byte[] readBuf = (byte[]) message.obj;
                     String readmessage = new String(readBuf, 0, message.arg1);
                     mMessageListAdapter.add(mConnectedDevcieName + ": " + readmessage);
+                    mNetworkService.write(readmessage.getBytes());
                     break;
                 case Constants.MESSAGE_DEVICE_NAME:
                     mConnectedDevcieName = message.getData().getString(Constants.DEVICE_NAME);
@@ -270,11 +329,25 @@ public class BluetoothChatFragment extends Fragment {
                     startChartService();
                 } else {
                     Log.d(TAG, "Bluetooth cannot enable");
-                    Toast.makeText(getActivity(), R.string.bluetooth_device_cannot_available,
+                    Toast.makeText(getActivity(), com.example.bluetoothbridgechat.R.string.bluetooth_device_cannot_available,
                             Toast.LENGTH_LONG).show();
                     getActivity().finish();
                 }
+                break;
+            case REQUEST_GET_SERVICE_ADDRESS:
+                if (resultCode == Activity.RESULT_OK) {
+                    connectService(data);
+                }
+                break;
+
         }
+    }
+
+    private void connectService(Intent data) {
+        String address = data.getExtras().getString(ConnectNetworkServiceActivity.EXTRA_SERVICE_ADDRESS);
+        Integer port = data.getExtras().getInt(ConnectNetworkServiceActivity.EXTRA_SERVICE_PORT);
+
+        mNetworkService.connectTo(address, port);
     }
 
     private void connectDevice(Intent data) {
@@ -287,15 +360,19 @@ public class BluetoothChatFragment extends Fragment {
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.bluetooth_chat, menu);
+        inflater.inflate(com.example.bluetoothbridgechat.R.menu.bluetooth_chat, menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
-            case R.id.menu_search_remote :
+            case com.example.bluetoothbridgechat.R.id.menu_search_remote :
                 Intent serverIntent = new Intent(getActivity(), DeviceListActivity.class);
                 startActivityForResult(serverIntent, REQUEST_SEARCH_DEVICES);
+                return true;
+            case com.example.bluetoothbridgechat.R.id.menu_connect_service:
+                Intent connectIntent = new Intent(getActivity(), ConnectNetworkServiceActivity.class);
+                startActivityForResult(connectIntent, REQUEST_GET_SERVICE_ADDRESS);
                 return true;
         }
         return false;
